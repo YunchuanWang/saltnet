@@ -644,7 +644,9 @@ function showView(view) {
   $("#view-download").classList.toggle("hidden", view !== "download");
   $("#view-mcp").classList.toggle("hidden", view !== "mcp");
   $("#view-build").classList.toggle("hidden", view !== "build");
+  $("#view-feedback").classList.toggle("hidden", view !== "feedback");
   if (view === "kg" && typeof initKG === "function") initKG();
+  if (view === "feedback" && typeof loadBoard === "function") loadBoard();
 }
 
 // Open a gene's detail modal by (name, species) — used by the KG view. Matches the

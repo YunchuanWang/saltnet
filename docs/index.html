@@ -38,6 +38,7 @@
       <button class="vtab" data-view="download">⬇️ Download data</button>
       <button class="vtab" data-view="mcp">🔌 MCP / agents</button>
       <button class="vtab" data-view="build">🛠️ Build your own</button>
+      <button class="vtab" data-view="feedback">💬 Feedback</button>
     </nav>
 
     <!-- ===== Dashboard view ===== -->
@@ -391,6 +392,27 @@ make check</pre>
         </div>
       </div>
     </section>
+
+    <!-- ===== Feedback view ===== -->
+    <section id="view-feedback" class="hidden">
+      <div class="panel">
+        <h2>💬 Suggestions &amp; feedback</h2>
+        <div class="body">
+          <p class="fb-sub">Missing a gene, a correction, or an idea? Send it below. Submissions are reviewed before appearing on the public board; your email (optional) stays private.</p>
+          <form id="fb-form" class="fb-form" autocomplete="off">
+            <textarea id="fb-msg" maxlength="2000" required placeholder="Your suggestion, correction, or a gene/paper we should add…"></textarea>
+            <div class="fb-row">
+              <input id="fb-contact" maxlength="200" placeholder="Email or name (optional, if you'd like a reply)" />
+              <input id="fb-hp" class="fb-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+              <button type="submit" class="btn primary" id="fb-send">Send</button>
+            </div>
+            <div id="fb-status" class="fb-status"></div>
+          </form>
+          <div id="fb-board" class="fb-board"></div>
+          <div id="fb-admin" class="fb-admin hidden"></div>
+        </div>
+      </div>
+    </section>
   </div>
 </main>
 
@@ -421,26 +443,6 @@ make check</pre>
     <div class="mbody" id="kg-ev-body"></div>
   </div>
 </div>
-
-<section class="feedback">
-  <div class="wrap">
-    <h2 class="fb-title">💬 Suggestions &amp; feedback</h2>
-    <p class="fb-sub">Missing a gene, a correction, or an idea? Send it — it goes privately to the maintainer (not shown publicly).</p>
-    <form id="fb-form" class="fb-form" autocomplete="off">
-      <textarea id="fb-msg" maxlength="2000" required placeholder="Your suggestion, correction, or a gene/paper we should add…"></textarea>
-      <div class="fb-row">
-        <input id="fb-contact" maxlength="200" placeholder="Email or name (optional, if you'd like a reply)" />
-        <!-- honeypot: hidden from humans, bots fill it -->
-        <input id="fb-hp" class="fb-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
-        <button type="submit" class="btn primary" id="fb-send">Send</button>
-      </div>
-      <div id="fb-status" class="fb-status"></div>
-    </form>
-
-    <div id="fb-board" class="fb-board"></div>
-    <div id="fb-admin" class="fb-admin hidden"></div>
-  </div>
-</section>
 
 <section class="visitors">
   <div class="wrap">
