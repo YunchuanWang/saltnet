@@ -1,0 +1,38 @@
+# SaltNet pipeline — Python dependencies (pip)
+# Install:  pip install -r requirements.txt
+# Python >= 3.10 required (for the MCP server).
+
+# --- data / IO ---
+pandas>=2.0
+pyarrow>=14.0          # parquet backend for pandas
+numpy>=1.24
+openpyxl>=3.1         # xlsx export
+requests>=2.31        # fulltext / Unpaywall downloads
+
+# --- embedding, clustering, keywords (Tier A: filter_corpus) ---
+torch>=2.0
+sentence-transformers>=2.5   # SPECTER2 embeddings
+umap-learn>=0.5
+hdbscan>=0.8
+keybert>=0.8
+scikit-learn>=1.3
+
+# --- knowledge graph / figures ---
+networkx>=3.0
+matplotlib>=3.8
+wordcloud>=1.9
+
+# --- utils ---
+tqdm>=4.66
+
+# --- MCP server (pipeline_mcp.py) ---
+mcp>=1.0
+
+# ============================================================================
+# EXTERNAL (not pip) — install separately:
+#   NCBI EDirect   : sh -c "$(curl -fsSL https://ftp.ncbi.nlm.nih.gov/entrez/entrezdirect/install-edirect.sh)"
+#                    (or: conda install -c bioconda entrez-direct)
+#   Claude Code CLI: required for all LLM stages (extract / arbitrate / audit),
+#                    authenticated with quota. https://claude.com/claude-code
+#   GNU make       : orchestrates the pipeline (usually preinstalled on Linux/macOS)
+# ============================================================================

@@ -8,10 +8,13 @@
 # Run `make help` for the target list.
 # ----------------------------------------------------------------------------
 
-PY   := /home/wangy1j/miniconda3/envs/salt_nlp/bin/python
-# esearch/efetch (EDirect 25.3) live in the salt_nlp env bin:
-BIN  := /home/wangy1j/miniconda3/envs/salt_nlp/bin
-WEB  := ../../final_table/salt_gene_db
+# Configurable. Activate the conda env (so `python`/`esearch` are on PATH), or
+# override, e.g.:  make build PY=/path/to/env/bin/python
+PY   ?= python
+# Dir holding esearch/efetch (EDirect). Empty = assume already on PATH.
+# Override if EDirect is elsewhere:  make search BIN=/path/to/edirect/bin
+BIN  ?=
+WEB  ?= ../../final_table/salt_gene_db
 
 # --- master data (the Tier A -> Tier B boundary) ---
 GENES_CSV := $(WEB)/docs/data/extracted_genes_v5_grand_final.csv
@@ -93,8 +96,8 @@ MINDATE ?= 1940
 MAXDATE ?= 2026
 
 search:                       ## keyword -> PMID -> abstracts -> parquet
-	PATH="$(BIN):$$PATH" ./00a_esearch.sh "$(QUERY)" $(PMIDS) $(MINDATE) $(MAXDATE)
-	PATH="$(BIN):$$PATH" ./00_fetch_pubmed.sh $(PMIDS) pubmed_expand/downloaded
+	$(if $(BIN),PATH="$(BIN):$$PATH" )./00a_esearch.sh "$(QUERY)" $(PMIDS) $(MINDATE) $(MAXDATE)
+	$(if $(BIN),PATH="$(BIN):$$PATH" )./00_fetch_pubmed.sh $(PMIDS) pubmed_expand/downloaded
 	$(PY) 01_parse_efetch.py
 
 filter:                       ## embed + cluster + keywords + topic filter

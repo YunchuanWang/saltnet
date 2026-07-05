@@ -1,58 +1,135 @@
-# SaltNet pipeline MCP server
+# SaltNet construction pipeline
 
-Exposes the literature → knowledge-base pipeline as agent-callable tools, one per
-stage, wrapping the `Makefile`. Turns "build a SaltNet-style resource for your own
-topic" into a conversation: an agent (or you) drives search → filter → extract →
-arbitrate → audit → check → build with your own keywords and chosen models.
+Turn the biomedical literature into an **evidence-linked knowledge graph and gene
+functional database** with a multi-agent LLM pipeline. This is the machinery that
+builds [SaltNet](https://supermanwasd.github.io/saltnet/) (plant salt-tolerance
+genes) — but it is topic-agnostic: give it your own PubMed query and it builds an
+analogous resource for any subject.
 
-## Tools
+Every annotation and every edge is kept only when supported by explicit text and is
+traceable to its PubMed IDs and verbatim evidence.
 
-| Tool | Kind | What it does |
+---
+
+## How it works — two tiers
+
+```
+Tier A  (LLM, expensive, per-PMID resumable)      Tier B (deterministic, cheap)
+  search  keyword -> PMID -> abstracts               consolidate -> master data
+  filter  embed -> cluster -> keep on-topic          build -> db + KG json + tables + figures
+  extract two independent models -> genes/edges      check -> verify numbers
+  arbitrate  full-text arbitration of disagreements
+  audit   per-field re-checks
+```
+
+Two coordinated outputs: a **gene functional dataset** and a **knowledge graph** of
+genes, pathways and typed relationships. Full stage-by-stage map: see
+[`PIPELINE_STAGES.md`](PIPELINE_STAGES.md).
+
+---
+
+## Prerequisites
+
+| Software | Why | Needed by |
 |---|---|---|
-| `search_abstracts(query, mindate, maxdate)` | async job | PubMed search by your keywords → download abstracts → parse |
-| `filter_corpus()` | async job | SPECTER2 embed + HDBSCAN cluster + KeyBERT + topic filter |
-| `extract(model_a, model_b, confirm)` | async job | dual-model extraction (genes, annotations, KG triples); `confirm=False` returns a cost estimate |
-| `arbitrate(model, confirm)` | async job | adjudicate disagreements + arbitrate single-model KG edges on full text |
-| `audit()` | async job | per-field Opus audits (substrate, category, species, role) |
-| `check()` | sync | recompute canonical numbers + scan manuscript for stale numbers |
-| `build_kg_db(target)` | sync | rebuild db + KG json + tables + figures from the master data |
-| `get_job(job_id)` / `list_jobs()` / `stop_job(job_id)` | sync | manage background jobs |
+| **Python ≥3.10 + data stack** | embedding / clustering / graph / MCP | all |
+| **NCBI EDirect** (`esearch`/`efetch`) | PubMed search + download | `search` |
+| **GNU make** | orchestration | all |
+| **Claude Code CLI** (logged in, with quota) | the LLM stages | `extract`, `arbitrate`, `audit` |
 
-Heavy LLM stages run as **background jobs** (return `job_id`; poll with `get_job`),
-so the tool call never blocks for hours. Light stages run synchronously.
+Only `extract`/`arbitrate`/`audit` call the LLM (cost money). `search`, `filter`,
+`check` and `build` run **without** any LLM.
 
-## Requirements
-- Python 3.10+ with `mcp` (present in the `salt_nlp` conda env)
-- NCBI EDirect on PATH (present: `salt_nlp/bin`, v25.3)
-- Claude Code CLI authenticated/quota available for the LLM stages
-- `make` (the server wraps the pipeline Makefile)
+## Install
 
-## Run
-```
-/home/wangy1j/miniconda3/envs/salt_nlp/bin/python pipeline_mcp.py
+```bash
+# Python env + EDirect in one go (environment.yml includes entrez-direct):
+conda env create -f environment.yml && conda activate saltnet
+#   ...or with pip (install EDirect separately):
+#   pip install -r requirements.txt
+
+# Claude Code CLI (only for the LLM stages): https://claude.com/claude-code
 ```
 
-## Register with an MCP client (stdio)
-Example `mcpServers` entry:
-```json
-{
-  "mcpServers": {
-    "saltnet-pipeline": {
-      "command": "/home/wangy1j/miniconda3/envs/salt_nlp/bin/python",
-      "args": ["/home/wangy1j/script_result/jupyter/AI_paper/all_keys_abstract/pipeline/mcp_pipeline/pipeline_mcp.py"]
-    }
-  }
-}
+---
+
+## Run it — two ways
+
+### A) Command line (Makefile)
+
+```bash
+make help          # list all targets
+
+# build a resource for your own topic:
+make search QUERY='("cold stress"[TIAB]) AND plants[MeSH]' MINDATE=2000 MAXDATE=2026
+make filter
+make extract       # LLM; dual-model
+make arbitrate     # LLM
+make audit         # LLM
+make consolidate   # merge -> master data files
+make build         # db + KG json + tables + figures
+make check         # verify numbers against the data
 ```
 
-## Typical agent flow
-1. `search_abstracts(query='("cold stress"[TIAB]) AND plants[MeSH]', mindate='2000')`
-2. `get_job(...)` until completed
-3. `filter_corpus()` → poll
-4. `extract(model_a='sonnet', model_b='opus', confirm=False)` → review cost → `confirm=True`
-5. `arbitrate(confirm=True)` → `audit()` → poll
-6. `build_kg_db('build')` then `check()`
+`make build` is incremental: change the master data and it rebuilds only what is
+downstream. Override the interpreter if the env is not activated:
+`make build PY=/path/to/env/bin/python`.
 
-Note: this is separate from the **query** MCP server
-(`final_table/saltnet/mcp_server/saltnet_mcp.py`), which serves the finished
-database (search_genes/get_gene/get_gene_network). This one *builds* the resource.
+### B) Conversationally (MCP server)
+
+The same stages are exposed as agent-callable MCP tools (`search_abstracts`,
+`filter_corpus`, `extract`, `arbitrate`, `audit`, `check`, `build_kg_db`, plus
+`get_job`/`list_jobs`). Heavy LLM stages run as background jobs with a cost
+guardrail. See [`mcp_pipeline/README.md`](mcp_pipeline/README.md) for tools and
+client registration.
+
+```bash
+python mcp_pipeline/pipeline_mcp.py     # stdio MCP server
+```
+
+---
+
+## Make targets
+
+| Target | Tier | Does |
+|---|---|---|
+| `search` | A | esearch → fetch abstracts → parse |
+| `filter` | A | SPECTER2 embed → HDBSCAN cluster → KeyBERT → topic filter |
+| `extract` | A | dual-model extraction (genes, annotations, KG triples) |
+| `arbitrate` | A | adjudicate + full-text arbitration of single-model edges |
+| `audit` | A | per-field Opus audits |
+| `consolidate` | A→B | merge per-paper outputs → master CSV + KG parquet |
+| `build` | B | `db` + `kg` + `tables` + `supp` + `figures` |
+| `check` | B | recompute canonical numbers + scan manuscript for stale ones |
+
+---
+
+## Notes
+
+- **LLM cost**: extraction runs `claude -p` per paper for two models; expect real
+  cost/time on large corpora. The MCP `extract` tool returns a cost estimate before
+  running. LLM loops are resumable and quota-aware (sleep-and-retry).
+- **`make db` / `make kg`** write into the web project
+  (`WEB ?= ../../final_table/salt_gene_db`); set/adjust `WEB` for your own site, or
+  skip these two targets if you only need the data files, tables and figures.
+- **Resumability**: per-PMID stages skip papers whose output already exists, so an
+  interrupted run resumes where it stopped.
+- This pipeline **builds** the resource. A separate MCP server
+  (`final_table/saltnet/mcp_server/`) **serves** the finished database
+  (search_genes / get_gene / get_gene_network).
+
+## Layout
+
+```
+README.md              this file
+Makefile               orchestration (Tier A + Tier B)
+requirements.txt       pip dependencies
+environment.yml        conda env (recommended; includes EDirect)
+PIPELINE_STAGES.md     stage -> script -> I/O map
+check_numbers.py       numbers guard (make check)
+00a_esearch.sh         keyword -> PMID entry point
+00..20_*.{py,sh}       pipeline stages
+loop_*.sh              quota-aware LLM loop wrappers
+_kg_*.py _make_*.py _fig_*.py   knowledge-graph / table / figure builders
+mcp_pipeline/          MCP server exposing the pipeline as agent tools
+```

@@ -13,6 +13,7 @@ import os
 import shlex
 import signal
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -21,8 +22,10 @@ from mcp.server.fastmcp import FastMCP
 PIPE = Path(__file__).resolve().parent.parent          # the pipeline/ dir
 JOBS = PIPE / ".mcp_jobs"
 JOBS.mkdir(exist_ok=True)
-PY = "/home/wangy1j/miniconda3/envs/salt_nlp/bin/python"
-BIN = "/home/wangy1j/miniconda3/envs/salt_nlp/bin"     # esearch/efetch (EDirect)
+# Derive from the interpreter running this server (in a conda env, esearch/efetch
+# live in the same bin dir). Override with SALTNET_PY / SALTNET_BIN if needed.
+PY = os.environ.get("SALTNET_PY", sys.executable)
+BIN = os.environ.get("SALTNET_BIN", str(Path(sys.executable).parent))
 
 mcp = FastMCP("saltnet-pipeline")
 
