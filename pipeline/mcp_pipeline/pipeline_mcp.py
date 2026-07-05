@@ -112,8 +112,9 @@ def search_abstracts(query: str = "-", mindate: str = "1940", maxdate: str = "20
 # --------------------------------------------------------------------------- #
 @mcp.tool()
 def filter_corpus() -> dict:
-    """Embed (SPECTER2), cluster (UMAP+HDBSCAN), extract keywords (KeyBERT) and
-    keep only on-topic abstracts. Background job; poll with get_job."""
+    """Extract per-document keywords (KeyBERT), cluster the corpus (SPECTER2
+    embeddings + UMAP/HDBSCAN), then use each cluster's keywords to keep only the
+    on-topic abstracts. Background job; poll with get_job."""
     return _launch(["filter"], "filter")
 
 

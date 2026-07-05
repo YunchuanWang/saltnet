@@ -16,7 +16,7 @@ traceable to its PubMed IDs and verbatim evidence.
 ```
 Tier A  (LLM, expensive, per-PMID resumable)      Tier B (deterministic, cheap)
   search  keyword -> PMID -> abstracts               consolidate -> master data
-  filter  embed -> cluster -> keep on-topic          build -> db + KG json + tables + figures
+  filter  keywords -> cluster -> keep on-topic        build -> db + KG json + tables + figures
   extract two independent models -> genes/edges      check -> verify numbers
   arbitrate  full-text arbitration of disagreements
   audit   per-field re-checks
@@ -94,7 +94,7 @@ python mcp_pipeline/pipeline_mcp.py     # stdio MCP server
 | Target | Tier | Does |
 |---|---|---|
 | `search` | A | esearch → fetch abstracts → parse |
-| `filter` | A | SPECTER2 embed → HDBSCAN cluster → KeyBERT → topic filter |
+| `filter` | A | KeyBERT keywords → cluster (SPECTER2 + HDBSCAN) → keyword-based topic filter |
 | `extract` | A | dual-model extraction (genes, annotations, KG triples) |
 | `arbitrate` | A | adjudicate + full-text arbitration of single-model edges |
 | `audit` | A | per-field Opus audits |

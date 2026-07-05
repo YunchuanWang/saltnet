@@ -11,14 +11,19 @@ The 7 proposed MCP tools each wrap one group of stages below.
 | fetch abstracts | `00_fetch_pubmed.sh` | `pmids.txt` | `downloaded/batch_*.txt` | ✅ skips existing batches |
 | parse | `01_parse_efetch.py` | `batch_*.txt` | `all_parsed_combined.parquet` (pmid,title,abstract,year,journal) | rebuild |
 
-## MCP tool 2 — `filter_corpus`  (keywords + clustering + filter)
+## MCP tool 2 — `filter_corpus`  (keywords → cluster → keyword-based filter)
+Flow: extract keywords first (KeyBERT), cluster the corpus, then use each cluster's
+keywords to decide which clusters (documents) to keep. Clustering runs on the
+SPECTER2 embeddings; the keywords drive the cluster keep/drop decision and the
+topic filter (this is how the original 70,689-abstract corpus was curated, then
+re-run after adding new literature → 122,617).
 | step | script | input | output | incremental |
 |---|---|---|---|---|
-| embed | `02_embed.py` | all_parsed | `embeddings.npy`, `pmid_order.csv` | new rows |
-| cluster | `03_cluster.py` | embeddings | `umap_5d.npy`, `clusters.parquet` | global |
-| keywords | `04_keybert.py` | all_parsed (+emb) | `keywords_per_doc.parquet` | new rows |
-| cluster annotation (Haiku) | `07_cluster_summary.py` | clusters + keywords | `cluster_summary/*.json` | ✅ skips done |
-| off-topic filter | `05_filter.py` | emb + clusters + decisions | retained PMID set | rebuild |
+| keyword extraction (KeyBERT) | `04_keybert.py` | all_parsed (SPECTER2 backbone) | `keywords_per_doc.parquet` | new rows |
+| embed (SPECTER2) | `02_embed.py` | all_parsed | `embeddings.npy`, `pmid_order.csv` | new rows |
+| cluster (UMAP + HDBSCAN) | `03_cluster.py` | embeddings | `umap_5d.npy`, `clusters.parquet` | global |
+| cluster keep/drop by keywords (Haiku) | `07_cluster_summary.py` | clusters + keywords | `cluster_summary/*.json` | ✅ skips done |
+| topic filter | `05_filter.py` | clusters + keep decisions | retained PMID set | rebuild |
 | noise rescue | `09_triage_noise.py` | dropped-noise PMIDs | `triage_noise/{pmid}.json` | ✅ per-PMID |
 
 ## MCP tool 3 — `extract`  (two user-chosen models)

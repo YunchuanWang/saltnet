@@ -10,7 +10,7 @@ arbitrate → audit → check → build with your own keywords and chosen models
 | Tool | Kind | What it does |
 |---|---|---|
 | `search_abstracts(query, mindate, maxdate)` | async job | PubMed search by your keywords → download abstracts → parse |
-| `filter_corpus()` | async job | SPECTER2 embed + HDBSCAN cluster + KeyBERT + topic filter |
+| `filter_corpus()` | async job | KeyBERT keywords → cluster (SPECTER2 + HDBSCAN) → keyword-based topic filter |
 | `extract(model_a, model_b, confirm)` | async job | dual-model extraction (genes, annotations, KG triples); `confirm=False` returns a cost estimate |
 | `arbitrate(model, confirm)` | async job | adjudicate disagreements + arbitrate single-model KG edges on full text |
 | `audit()` | async job | per-field Opus audits (substrate, category, species, role) |
