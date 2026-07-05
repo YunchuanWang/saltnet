@@ -220,8 +220,8 @@ pip install -r requirements.txt</pre>
             pipeline</strong>. That pipeline is packaged as a second MCP toolbox — the
             <strong>build</strong> server — so you can construct your own evidence-traceable
             knowledge graph + database for <em>any</em> topic, with your own keywords and your own
-            choice of models. It turns "build a SaltNet-style resource" into a conversation:
-            <em>search → filter → extract → arbitrate → audit → check → build</em>.</p>
+            choice of models. Eight stages take you from a keyword to a finished resource:
+            <em>search → filter → extract → arbitrate → audit → consolidate → build → check</em>.</p>
 
           <div class="tier-box">
             <div class="tier"><span class="tier-tag a">Tier A — extraction</span>
@@ -232,31 +232,143 @@ pip install -r requirements.txt</pre>
               re-runs from the master data.</div>
           </div>
 
-          <h3 class="mcp-h">The 7 tools</h3>
+          <h3 class="mcp-h">Pipeline flowchart — stage → program → requirement</h3>
+          <div class="flow-legend">
+            <span class="chip nollm">no LLM</span> runs with just Python/EDirect ·
+            <span class="chip llm">LLM · Claude Code</span> costs quota (only 3 stages) ·
+            each stage = a <code>make</code> target and an MCP tool
+          </div>
+
+          <div class="flow">
+            <div class="flow-tier a">Tier A · literature → structured data <span>(per-PMID, resumable; only 3 stages use the LLM)</span></div>
+
+            <div class="flow-step ta">
+              <div class="fs-num">1</div>
+              <div class="fs-body">
+                <div class="fs-head"><span class="fs-title">Search</span>
+                  <span class="chip nollm">no LLM</span><span class="chip req">EDirect · network</span></div>
+                <div class="fs-cmd"><code>make search</code> &nbsp;·&nbsp; MCP <code>search_abstracts</code></div>
+                <div class="fs-desc">PubMed <em>esearch</em> by your keywords → fetch abstracts → parse.
+                  <span class="fs-prog">00a_esearch.sh · 00_fetch_pubmed.sh · 01_parse_efetch.py</span></div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step ta">
+              <div class="fs-num">2</div>
+              <div class="fs-body">
+                <div class="fs-head"><span class="fs-title">Filter</span>
+                  <span class="chip nollm">no LLM</span><span class="chip req">Python data stack</span></div>
+                <div class="fs-cmd"><code>make filter</code> &nbsp;·&nbsp; MCP <code>filter_corpus</code></div>
+                <div class="fs-desc">KeyBERT keywords + SPECTER2 embedding + HDBSCAN clustering → keep on-topic papers.
+                  <span class="fs-prog">02_embed.py · 03_cluster.py · 04_keybert.py · 05_filter.py</span></div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step ta">
+              <div class="fs-num">3</div>
+              <div class="fs-body">
+                <div class="fs-head"><span class="fs-title">Extract</span>
+                  <span class="chip llm">LLM · Claude Code (×2 models)</span></div>
+                <div class="fs-cmd"><code>make extract</code> &nbsp;·&nbsp; MCP <code>extract(model_a, model_b, confirm)</code></div>
+                <div class="fs-desc">Two independent models extract genes, annotations, and KG triples per paper (abstract + full text). <code>confirm=False</code> returns a cost estimate first.
+                  <span class="fs-prog">06_cli_extract_v5.py · 13_extract_fulltext.py · 19_kg_extract.py · loop_*.sh</span></div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step ta">
+              <div class="fs-num">4</div>
+              <div class="fs-body">
+                <div class="fs-head"><span class="fs-title">Arbitrate</span>
+                  <span class="chip llm">LLM · Claude Code</span></div>
+                <div class="fs-cmd"><code>make arbitrate</code> &nbsp;·&nbsp; MCP <code>arbitrate(confirm)</code></div>
+                <div class="fs-desc">Adjudicate model disagreements and arbitrate single-model KG edges on full text.
+                  <span class="fs-prog">08_adjudicate.py · 14_adjudicate_fulltext.py · 20_arbitrate_disagree.py</span></div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step ta">
+              <div class="fs-num">5</div>
+              <div class="fs-body">
+                <div class="fs-head"><span class="fs-title">Audit</span>
+                  <span class="chip llm">LLM · Claude Code</span></div>
+                <div class="fs-cmd"><code>make audit</code> &nbsp;·&nbsp; MCP <code>audit()</code></div>
+                <div class="fs-desc">Per-field Opus re-checks of substrate, functional category, species, and inferred role.
+                  <span class="fs-prog">15_audit_transport.py · 16_audit_funccat.py · 17_audit_species.py · 18_audit_role.py</span></div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step ab">
+              <div class="fs-num">6</div>
+              <div class="fs-body">
+                <div class="fs-head"><span class="fs-title">Consolidate</span>
+                  <span class="chip nollm">no LLM</span><span class="chip req">Python</span></div>
+                <div class="fs-cmd"><code>make consolidate</code> &nbsp;·&nbsp; (folded into MCP <code>build_kg_db</code>)</div>
+                <div class="fs-desc">Merge per-paper outputs → master gene CSV + KG parquet (consensus + arbitrated).
+                  <span class="fs-prog">_merge_abstract_fulltext.py · _build_final.py · _kg_strict_plus_arbitrated.py</span></div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-tier b">Tier B · data → outputs <span>(deterministic, cheap, no LLM)</span></div>
+
+            <div class="flow-step tb">
+              <div class="fs-num">7</div>
+              <div class="fs-body">
+                <div class="fs-head"><span class="fs-title">Build</span>
+                  <span class="chip nollm">no LLM</span><span class="chip req">Python</span></div>
+                <div class="fs-cmd"><code>make build</code> &nbsp;·&nbsp; MCP <code>build_kg_db('build')</code></div>
+                <div class="fs-desc">Rebuild the SQLite database, per-species KG JSON, tables, supplementary tables, and figures from the master data.
+                  <span class="fs-prog">build_db.py · build_kg.py · _make_table*.py · _fig_*.py</span></div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+
+            <div class="flow-step tb">
+              <div class="fs-num">8</div>
+              <div class="fs-body">
+                <div class="fs-head"><span class="fs-title">Check</span>
+                  <span class="chip nollm">no LLM</span><span class="chip req">Python</span></div>
+                <div class="fs-cmd"><code>make check</code> &nbsp;·&nbsp; MCP <code>check()</code></div>
+                <div class="fs-desc">Recompute the canonical numbers and scan the manuscript for stale ones.
+                  <span class="fs-prog">check_numbers.py · _qc_transporter_tcdb.py</span></div>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="mcp-h">What each stage needs</h3>
           <table class="mcp-tools">
-            <thead><tr><th>Tool</th><th>Tier</th><th>What it does</th></tr></thead>
+            <thead><tr><th>Software</th><th>Why</th><th>Needed by</th></tr></thead>
             <tbody>
-              <tr><td><code>search_abstracts</code></td><td>search</td><td>PubMed search by your keywords → download abstracts → parse.</td></tr>
-              <tr><td><code>filter_corpus</code></td><td>cluster</td><td>SPECTER2 embed + HDBSCAN cluster + KeyBERT + on-topic filter.</td></tr>
-              <tr><td><code>extract</code></td><td>A · LLM</td><td>Dual-model extraction of genes, annotations, and KG triples. <code>confirm=False</code> returns a cost estimate first.</td></tr>
-              <tr><td><code>arbitrate</code></td><td>A · LLM</td><td>Adjudicate model disagreements and arbitrate single-model KG edges on full text.</td></tr>
-              <tr><td><code>audit</code></td><td>A · LLM</td><td>Per-field Opus audits (transport substrate, functional category, species, role).</td></tr>
-              <tr><td><code>check</code></td><td>B</td><td>Recompute canonical numbers and scan the manuscript for stale numbers.</td></tr>
-              <tr><td><code>build_kg_db</code></td><td>B</td><td>Rebuild the database, KG JSON, tables, and figures from the master data.</td></tr>
+              <tr><td><strong>Python ≥3.10</strong> + data stack</td><td>embedding / clustering / graph / MCP</td><td>all stages</td></tr>
+              <tr><td><strong>NCBI EDirect</strong></td><td>PubMed search + download</td><td>Search</td></tr>
+              <tr><td><strong>GNU make</strong></td><td>orchestration</td><td>all (command-line mode)</td></tr>
+              <tr><td><strong>Claude Code CLI</strong> (logged in, with quota)</td><td>runs the LLM stages (they cost money)</td><td><strong>Extract, Arbitrate, Audit only</strong></td></tr>
+              <tr><td>Network access</td><td>PubMed / PMC / Unpaywall</td><td>Search + full-text download</td></tr>
             </tbody>
           </table>
-          <p class="mcp-note">Heavy LLM stages run as <strong>background jobs</strong> (return a
-            <code>job_id</code>; poll with <code>get_job</code> / <code>list_jobs</code> /
-            <code>stop_job</code>) so a call never blocks for hours; light stages run synchronously.</p>
 
-          <h3 class="mcp-h">A typical build (your keywords, your models)</h3>
-          <pre class="code">search_abstracts(query='("cold stress"[TIAB]) AND plants[MeSH]', mindate='2000')
-get_job(...)                                   # poll until completed
-filter_corpus()                                # embed + cluster + on-topic filter
-extract(model_a='sonnet', model_b='opus', confirm=False)   # review cost estimate…
-extract(model_a='sonnet', model_b='opus', confirm=True)    # …then run
-arbitrate(confirm=True)  →  audit()            # adjudicate + per-field audits
-build_kg_db('build')     →  check()            # deterministic build + number check</pre>
+          <h3 class="mcp-h">Install</h3>
+          <pre class="code">conda env create -f environment.yml &amp;&amp; conda activate saltnet   # Python + EDirect in one go
+#   or:  pip install -r requirements.txt        # then install EDirect separately
+# Claude Code CLI (only for the LLM stages):  https://claude.com/claude-code</pre>
+
+          <h3 class="mcp-h">Run it — command line (your keywords)</h3>
+          <pre class="code">make search QUERY='("cold stress"[TIAB]) AND plants[MeSH]' MINDATE=2000
+make filter
+make extract      # LLM · dual-model
+make arbitrate    # LLM
+make audit        # LLM
+make consolidate  # merge → master data
+make build        # db + KG + tables + figures
+make check</pre>
+          <p class="mcp-note">Or drive the same stages <strong>conversationally</strong> via the MCP
+            server below — heavy LLM stages run as background jobs (<code>get_job</code> /
+            <code>list_jobs</code>) with a cost guardrail.</p>
 
           <h3 class="mcp-h">Register the build server (MCP, stdio)</h3>
           <pre class="code">{
@@ -267,10 +379,8 @@ build_kg_db('build')     →  check()            # deterministic build + number 
     }
   }
 }</pre>
-          <p class="mcp-note"><strong>Requirements:</strong> Python 3.10+ with <code>mcp</code>
-            (the <code>salt_nlp</code> conda env), NCBI <strong>EDirect</strong> on PATH, and an
-            authenticated <strong>Claude Code CLI</strong> with quota for the LLM (Tier A) stages.
-            The server wraps the pipeline <code>Makefile</code>.</p>
+          <p class="mcp-note">Point <code>command</code> at the Python from the conda env above and
+            <code>args</code> at your clone's <code>pipeline/mcp_pipeline/pipeline_mcp.py</code> (absolute paths).</p>
 
           <div class="build-links">
             <a class="btn primary" href="https://github.com/supermanwasd/saltnet/blob/main/pipeline/README.md" target="_blank" rel="noopener">Full protocol (zero → run) ↗</a>

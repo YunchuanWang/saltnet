@@ -205,6 +205,32 @@ pre.code { background: #0c2233; color: #d6e6f2; border-radius: 9px; padding: 13p
 .tier strong { color: var(--ink); }
 .mcp-tools td:nth-child(2) { white-space: nowrap; color: var(--muted); font-size: 12px; }
 .build-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+/* pipeline flowchart */
+.flow-legend { font-size: 12px; color: var(--muted); margin: 0 0 14px; line-height: 1.7; }
+.chip { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 12px; white-space: nowrap; }
+.chip.nollm { background: #e6f0e9; color: #2e7d52; }
+.chip.llm { background: #f8e7e2; color: var(--warn); }
+.chip.req { background: var(--accent-soft); color: var(--accent-dark); }
+.flow { max-width: 760px; }
+.flow-tier { font-size: 12.5px; font-weight: 700; color: #fff; padding: 5px 12px; border-radius: 8px; margin: 8px 0; }
+.flow-tier span { font-weight: 400; opacity: .9; font-size: 11.5px; }
+.flow-tier.a { background: var(--accent); } .flow-tier.b { background: #2e8b57; }
+.flow-step { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line);
+  border-left: 4px solid var(--accent); border-radius: 10px; padding: 11px 14px; background: #fbfdff; }
+.flow-step.ta { border-left-color: var(--accent); }
+.flow-step.ab { border-left-color: #6b8e9e; }
+.flow-step.tb { border-left-color: #2e8b57; }
+.fs-num { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent-dark); color: #fff;
+  font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.fs-body { flex: 1; min-width: 0; }
+.fs-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 3px; }
+.fs-title { font-weight: 700; color: var(--accent-dark); font-size: 14.5px; }
+.fs-cmd { font-size: 12.5px; color: var(--ink); margin-bottom: 3px; }
+.fs-cmd code { background: var(--chip); padding: 1px 6px; border-radius: 4px; }
+.fs-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.fs-prog { display: block; margin-top: 3px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; color: #6b8090; }
+.flow-arrow { text-align: center; color: #9fb3c2; font-size: 15px; line-height: 1; margin: 3px 0; }
 .dl-terms { margin-top: 18px; padding: 12px 14px; font-size: 12.5px; line-height: 1.5; color: var(--muted);
   background: var(--accent-soft); border: 1px solid var(--line); border-radius: 8px; }
 
