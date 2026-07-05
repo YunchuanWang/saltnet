@@ -897,5 +897,87 @@ async function runSingleCountry(map, cap, geo) {
   }
 }
 
+// ---- suggestions: form + moderated public board (+ owner review via ?admin=TOKEN) ----
+function fbDate(iso) { return (iso || "").slice(0, 10); }
+
+async function loadBoard() {
+  const host = $("#fb-board");
+  if (!host || !VISITOR_API) return;
+  let items = [];
+  try { items = await (await fetch(VISITOR_API.replace(/\/$/, "") + "/board")).json(); } catch (_) { return; }
+  if (!Array.isArray(items) || !items.length) { host.innerHTML = ""; return; }
+  host.innerHTML =
+    `<div class="fb-board-title">Recent suggestions (${items.length})</div>` +
+    items.map((s) => `<div class="fb-item"><div class="fb-item-msg">${esc(s.message)}</div>` +
+      `<div class="fb-item-date">${esc(fbDate(s.time))}</div></div>`).join("");
+}
+
+function initFeedback() {
+  const form = $("#fb-form");
+  if (!form) return;
+  const base = VISITOR_API.replace(/\/$/, "");
+  const status = $("#fb-status");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const message = $("#fb-msg").value.trim();
+    if (message.length < 2) return;
+    $("#fb-send").disabled = true;
+    status.className = "fb-status"; status.textContent = "Sending…";
+    try {
+      const r = await fetch(base + "/suggest", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ message, contact: $("#fb-contact").value.trim(), hp: $("#fb-hp").value }),
+      });
+      const d = await r.json();
+      if (d.ok) {
+        status.className = "fb-status ok";
+        status.textContent = "Thanks! Your suggestion was submitted and will appear here once reviewed.";
+        form.reset();
+      } else {
+        status.className = "fb-status err"; status.textContent = d.error || "Could not submit.";
+      }
+    } catch (_) {
+      status.className = "fb-status err"; status.textContent = "Network error — please try again.";
+    }
+    $("#fb-send").disabled = false;
+  });
+  loadBoard();
+
+  // owner review: open the site with ?admin=YOUR_TOKEN
+  const token = new URLSearchParams(location.search).get("admin");
+  if (token) initAdmin(base, token);
+}
+
+async function initAdmin(base, token) {
+  const host = $("#fb-admin");
+  host.classList.remove("hidden");
+  host.innerHTML = "<div class='fb-board-title'>Review queue (admin)</div><p class='fb-sub'>Loading…</p>";
+  let all = [];
+  try { all = await (await fetch(`${base}/suggestions?token=${encodeURIComponent(token)}`)).json(); }
+  catch (_) { host.innerHTML = "<p class='fb-status err'>Failed to load.</p>"; return; }
+  if (!Array.isArray(all)) { host.innerHTML = "<p class='fb-status err'>Unauthorized (wrong admin token).</p>"; return; }
+  const render = () => {
+    host.innerHTML = `<div class="fb-board-title">Review queue — ${all.length} total</div>` +
+      all.map((s) => `<div class="fb-item ${s.status}">
+        <div class="fb-item-msg">${esc(s.message)}</div>
+        <div class="fb-item-meta">${esc(s.status)} · ${esc(fbDate(s.time))}${s.contact ? " · " + esc(s.contact) : ""}
+          ${s.status !== "approved" ? `<button class="btn fb-ap" data-k="${esc(s.key)}">Approve</button>` : ""}
+          <button class="btn fb-del" data-k="${esc(s.key)}">Delete</button></div></div>`).join("");
+    host.querySelectorAll(".fb-ap, .fb-del").forEach((b) =>
+      b.addEventListener("click", async () => {
+        const action = b.classList.contains("fb-ap") ? "approve" : "delete";
+        await fetch(`${base}/moderate?token=${encodeURIComponent(token)}`, {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ key: b.dataset.k, action }),
+        });
+        if (action === "delete") all = all.filter((x) => x.key !== b.dataset.k);
+        else { const it = all.find((x) => x.key === b.dataset.k); if (it) it.status = "approved"; }
+        render(); loadBoard();
+      }));
+  };
+  render();
+}
+
 boot();
 initVisitorMap();
+initFeedback();
