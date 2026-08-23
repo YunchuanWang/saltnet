@@ -52,7 +52,7 @@
     const byName = [...index].sort((a, b) =>
       a.species.toLowerCase() < b.species.toLowerCase() ? -1 : 1);   // dropdown alphabetical
     sel.innerHTML = byName
-      .map((d) => `<option value="${d.slug}">${esc(d.species)} — ${d.genes} genes, ${d.edges} edges</option>`)
+      .map((d) => `<option value="${d.slug}">${esc(d.species)}</option>`)
       .join("");
     sel.addEventListener("change", () => loadSpecies(sel.value));
     if (defaultSlug) { sel.value = defaultSlug; loadSpecies(defaultSlug); }
@@ -77,9 +77,7 @@
     recomputeVisible();
     resize();
     fitView();
-    const np = data.nodes.filter((n) => n.t === "p").length;
-    document.getElementById("kg-stat").textContent =
-      `${data.species} · ${data.nodes.length - np} genes · ${np} pathways · ${data.edges.length} edges`;
+    document.getElementById("kg-stat").textContent = data.species;
     schedule();
   }
 
