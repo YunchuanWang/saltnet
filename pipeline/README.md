@@ -2,7 +2,7 @@
 
 Turn the biomedical literature into an **evidence-linked knowledge graph and gene
 functional database** with a multi-agent LLM pipeline. This is the machinery that
-builds [SaltNet](https://supermanwasd.github.io/saltnet/) (plant salt-tolerance
+builds [SaltNet](https://yunchuanwang.github.io/saltnet/) (plant salt-tolerance
 genes) — but it is topic-agnostic: give it your own PubMed query and it builds an
 analogous resource for any subject.
 

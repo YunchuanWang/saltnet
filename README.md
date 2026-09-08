@@ -5,7 +5,7 @@ with alias clustering, PubMed support, evidence-strength grading, functional cat
 transport substrate, subcellular localization, mechanistic role, per-paper evidence, a
 per-species knowledge graph, and TCDB-checked transporter annotations.
 
-**🔗 Website:** <https://supermanwasd.github.io/saltnet/>
+**🔗 Website:** <https://yunchuanwang.github.io/saltnet/>
 
 - 8,785 gene × species records · 854 species · ~6,900 unique PMIDs
 - Per-species knowledge graph: 8,644 nodes · 15,070 edges · 24,498 evidence quotes
@@ -19,16 +19,16 @@ or download the whole dataset by clicking **Code → Download ZIP** at the top o
 
 | Data | File | Direct download |
 |---|---|---|
-| **Full gene table (CSV)** — one row per gene × species, all 26 fields | `docs/data/extracted_genes_v5_grand_final.csv` | [download](https://github.com/supermanwasd/saltnet/raw/main/docs/data/extracted_genes_v5_grand_final.csv) |
-| **SQLite database** — genes + child tables + species dimension | `docs/salt_genes.db` | [download](https://github.com/supermanwasd/saltnet/raw/main/docs/salt_genes.db) |
-| **Per-paper evidence (JSON)** — each paper's experimental context per gene | `docs/gene_papers.json` | [download](https://github.com/supermanwasd/saltnet/raw/main/docs/gene_papers.json) |
-| **TCDB transporter annotation (JSON)** — family / TC class per transporter | `docs/tcdb_families.json` | [download](https://github.com/supermanwasd/saltnet/raw/main/docs/tcdb_families.json) |
+| **Full gene table (CSV)** — one row per gene × species, all 26 fields | `docs/data/extracted_genes_v5_grand_final.csv` | [download](https://github.com/YunchuanWang/saltnet/raw/main/docs/data/extracted_genes_v5_grand_final.csv) |
+| **SQLite database** — genes + child tables + species dimension | `docs/salt_genes.db` | [download](https://github.com/YunchuanWang/saltnet/raw/main/docs/salt_genes.db) |
+| **Per-paper evidence (JSON)** — each paper's experimental context per gene | `docs/gene_papers.json` | [download](https://github.com/YunchuanWang/saltnet/raw/main/docs/gene_papers.json) |
+| **TCDB transporter annotation (JSON)** — family / TC class per transporter | `docs/tcdb_families.json` | [download](https://github.com/YunchuanWang/saltnet/raw/main/docs/tcdb_families.json) |
 | **Knowledge graph** — one positioned subgraph + evidence per species | `docs/kg/` (`index.json`, `<species>.json`, `<species>.ev.json`) | browse the [`docs/kg/`](docs/kg) folder |
 
 To get everything at once:
 
 ```bash
-git clone https://github.com/supermanwasd/saltnet.git
+git clone https://github.com/YunchuanWang/saltnet.git
 # data lives in saltnet/docs/
 ```
 

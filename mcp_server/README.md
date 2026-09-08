@@ -24,7 +24,7 @@ data files bundled in `../docs` — **no network, backend, API key, or external 
 ## Step 2 — Get the code
 
 ```bash
-git clone https://github.com/supermanwasd/saltnet.git
+git clone https://github.com/YunchuanWang/saltnet.git
 cd saltnet/mcp_server
 ```
 
