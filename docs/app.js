@@ -798,6 +798,7 @@ async function initVisitorMap() {
       series: { regions: [{ attribute: "fill", scale: ["#bcd6e8", "#0c3a63"],
         normalizeFunction: "polynomial", values: {} }] },
       onRegionTooltipShow(_e, tooltip, code) {
+        if (code === "TW") tooltip.text("Taiwan, China", true);
         const n = vmAgg[code];
         if (n != null) tooltip.text(`${tooltip.text()}: ${(+n).toLocaleString()} visit${+n === 1 ? "" : "s"}`, true);
       },
@@ -823,14 +824,20 @@ function paintAggregate(map, cap, geo, raw) {
     if (/^[A-Z]{2}$/.test(k) && Number.isFinite(n) && n > 0) agg[k] = n;
   }
   if (!Object.keys(agg).length) return false;
-  vmAgg = agg;
-  try { map.series.regions[0].setValues(agg); } catch (_) {}
+  // Treat Taiwan (TW) as part of China (CN): one combined bucket for stats.
+  const merged = { ...agg };
+  if (merged.TW) { merged.CN = (merged.CN || 0) + merged.TW; delete merged.TW; }
+  // Colour the CN and TW shapes with the same combined value.
+  const fillVals = { ...merged };
+  if (merged.CN != null) fillVals.TW = merged.CN;
+  vmAgg = fillVals;
+  try { map.series.regions[0].setValues(fillVals); } catch (_) {}
   if (geo) {
     try { if (Number.isFinite(geo.lat) && Number.isFinite(geo.lng))
       map.addMarkers([{ name: geo.country, coords: [geo.lat, geo.lng] }]); } catch (_) {}
   }
-  const total = Object.values(agg).reduce((s, n) => s + (+n || 0), 0);
-  const nC = Object.keys(agg).length;
+  const total = Object.values(merged).reduce((s, n) => s + (+n || 0), 0);
+  const nC = Object.keys(merged).length;
   if (cap) {
     cap.innerHTML =
       `<strong>${total.toLocaleString()}</strong> visits from <strong>${nC}</strong> countr${nC === 1 ? "y" : "ies"}` +
