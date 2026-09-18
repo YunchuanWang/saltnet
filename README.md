@@ -8,7 +8,7 @@ per-species knowledge graph, and TCDB-checked transporter annotations.
 **🔗 Website:** <https://yunchuanwang.github.io/saltnet/>
 
 - 8,350 gene × species records · 739 species · 6,898 unique PMIDs
-- Per-species knowledge graph: 8,483 nodes · 14,983 edges · 24,498 evidence quotes
+- Per-species knowledge graph: 8,481 nodes · 14,964 edges · 24,462 evidence quotes
 
 ---
 
